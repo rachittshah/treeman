@@ -44,5 +44,6 @@ For example, running the command ```treeman /home/user/documents -a``` will prin
 - Benchmark the tool vs native ```tree```
 - I failed at setting up CI/CD for building binaries on each deployment, which I hope to learn.
 - Add more native features from ```tree```.
+- Use cobra in the next release.
 
 
