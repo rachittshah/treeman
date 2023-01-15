@@ -34,10 +34,10 @@ For example, running the command ```treeman /home/user/documents -a``` will prin
 
 ### References
 
-https://www.youtube.com/watch?v=XbKSssBftLM&t=225s
-https://github.com/evolbioinfo/gotree
-https://github.com/a8m/tree
-https://chat.openai.com/
+- https://www.youtube.com/watch?v=XbKSssBftLM&t=225s
+- https://github.com/evolbioinfo/gotree
+- https://github.com/a8m/tree
+- https://chat.openai.com/
 
 ### Future improvements
 
