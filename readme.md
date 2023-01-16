@@ -22,6 +22,9 @@ For windows, download and run the exe.
 
 For Linux and MacOS, download the binary, and move it to ```usr/local/bin```
 
+To build the binaries locally:
+```go build -o treeman```
+
 Flags:
 
 - directory: the path of the directory you want to print the tree for.
