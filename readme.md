@@ -48,5 +48,7 @@ For example, running the command ```treeman /home/user/documents -a``` will prin
 - I failed at setting up CI/CD for building binaries on each deployment, which I hope to learn.
 - Add more native features from ```tree```.
 - Use cobra in the next release.
+- Use ```gotree``` to generate tree structures.
+- Add go-routine to parallely transverse directories.
 
 
