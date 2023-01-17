@@ -22,6 +22,9 @@ For windows, download and run the exe.
 
 For Linux and MacOS, download the binary, and move it to ```usr/local/bin```
 
+To build the binaries locally:
+```go build -o treeman```
+
 Flags:
 
 - directory: the path of the directory you want to print the tree for.
@@ -44,5 +47,6 @@ For example, running the command ```treeman /home/user/documents -a``` will prin
 - Benchmark the tool vs native ```tree```
 - I failed at setting up CI/CD for building binaries on each deployment, which I hope to learn.
 - Add more native features from ```tree```.
+- Use cobra in the next release.
 
 
