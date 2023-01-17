@@ -6,66 +6,19 @@ import (
 	"path/filepath"
 )
 
-// printTree is a recursive function that takes in a directory path, an indentation string,
-// flags for full path, only directories, disk usage, and hidden files and returns the total size of the directory
-// The function opens the directory and reads the files and subdirectories in it.
-// For each file or subdirectory, it checks the flags and indentation and prints the file/subdirectory in a tree format.
-// If the file is a directory and the flag for disk usage is true, it calls the function recursively to calculate the total size of the directory
-func printTree(path string, indent string, fullPath, onlyDirs, du bool, includeHidden bool) int64 {
-	file, err := os.Open(path)
-	if err != nil {
-		fmt.Println(err)
-		return 0
-	}
-	defer file.Close()
-
-	files, err := file.Readdir(-1)
-	if err != nil {
-		fmt.Println(err)
-		return 0
-	}
-
-	var size int64
-	for _, file := range files {
-		// If the flag for full path is not set, the flag for only directories is not set, and the file is hidden and includeHidden flag is not set, skip the file
-		if !fullPath && file.Name()[0] == '.' && !onlyDirs && !includeHidden {
-			continue
-		}
-		if file.IsDir() {
-			if du {
-				size = printTree(filepath.Join(path, file.Name()), indent+"|  ", fullPath, onlyDirs, du, includeHidden)
-				fmt.Printf("%s|--%s [%d bytes]\n", indent, file.Name(), size)
-			} else if !onlyDirs {
-				if fullPath {
-					fmt.Println(filepath.Join(path, file.Name()) + "/")
-				} else {
-					fmt.Println(indent + "|--" + file.Name() + "/")
-				}
-				printTree(filepath.Join(path, file.Name()), indent+"|  ", fullPath, onlyDirs, du, includeHidden)
-			}
-		} else if !onlyDirs {
-			if fullPath {
-				fmt.Println(filepath.Join(path, file.Name()))
-			} else {
-				fmt.Println(indent + "|--" + file.Name())
-			}
-			size += file.Size()
-		}
-	}
-	return size
+type options struct {
+	includeHidden bool
+	onlyDirs      bool
+	fullPath      bool
+	du            bool
 }
 
-func main() {
-	// Check if the user provided the directory path as an argument
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: tree [directory] [-a] [-d] [-f] [--du]")
-		return
-	}
-	root := os.Args[1]
-	// Initialize the flags as
-	// Initialize the flags as default values
-	includeHidden, onlyDirs, fullPath, du := true, false, false, false
-	// Iterate through the command line arguments and set the flags based on the passed options
+func handleCommandLineArguments() (options, error) {
+	includeHidden := true
+	onlyDirs := false
+	fullPath := false
+	du := false
+
 	for _, arg := range os.Args[2:] {
 		switch arg {
 		case "-a":
@@ -78,8 +31,100 @@ func main() {
 			du = true
 		}
 	}
-	// Print the root directory name
+	return options{includeHidden, onlyDirs, fullPath, du}, nil
+}
+
+func printTreeStructure(path string, indent string, options options) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	files, err := file.Readdir(-1)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		if !options.includeHidden && file.Name()[0] == '.' {
+			continue
+		}
+		if file.IsDir() {
+			if options.fullPath {
+				fmt.Println(filepath.Join(path, file.Name()) + "/")
+			} else {
+				fmt.Println(indent + "|--" + file.Name() + "/")
+			}
+			err := printTreeStructure(filepath.Join(path, file.Name()), indent+"|  ", options)
+			if err != nil {
+				return err
+			}
+		} else if !options.onlyDirs {
+			if options.fullPath {
+				fmt.Println(filepath.Join(path, file.Name()))
+			} else {
+				fmt.Println(indent + "|--" + file.Name())
+			}
+		}
+	}
+	return nil
+}
+
+func calculateSize(path string, options options) (int64, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return 0, err
+	}
+	defer file.Close()
+
+	files, err := file.Readdir(-1)
+	if err != nil {
+		return 0, err
+	}
+
+	var size int64
+	for _, file := range files {
+		if !options.includeHidden && file.Name()[0] == '.' {
+			continue
+		}
+		if file.IsDir() {
+			subdirSize, err := calculateSize(filepath.Join(path, file.Name()), options)
+			if err != nil {
+				return 0, err
+			}
+			size += subdirSize
+		} else if !options.onlyDirs {
+			size += file.Size()
+		}
+	}
+	return size, nil
+}
+
+func main() {
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: tree [directory] [-a] [-d] [-f] [--du]")
+		return
+	}
+	root := os.Args[1]
+	options, err := handleCommandLineArguments()
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return
+	}
+
 	fmt.Println(root + "/")
-	// Call the printTree function to print the tree structure of the directory
-	printTree(root, "", fullPath, onlyDirs, du, includeHidden)
+	err = printTreeStructure(root, "", options)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return
+	}
+	if options.du {
+		size, err := calculateSize(root, options)
+		if err != nil {
+			fmt.Println("Error: ", err)
+			return
+		}
+		fmt.Printf("Total Size: %d bytes\n", size)
+	}
 }
